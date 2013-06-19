@@ -1,7 +1,7 @@
 ## dhtcrawler
 
 dhtcrawler is a DHT crawler written in erlang. It can join a DHT network and crawl many P2P torrents. The program save all torrent info into database and provide an http interface to search a torrent by a keyword.
-
+![screenshot](https://github.com/kevinlynx/dhtcrawler/blob/master/screenshot.png)
 ## Usage
 
 * Download mongodb and start it with text search,  i.e:
