@@ -33,3 +33,5 @@ dhtcrawler is a DHT crawler written in erlang. It can join a DHT network and cra
 
 see priv/dhtcrawler.config.
 
+**NOTE**, when you change `node_count` value in dhtcrawler.config, you'd better delete all files saved in dhtstate directory.
+
