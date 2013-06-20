@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Yet Another DHT Search Engine</title>
+<title>Yet Another Magnet Search Engine</title>
 <style type="text/css" media="screen">
 body { margin:0; padding:0; }
 #wrap {
@@ -34,7 +34,7 @@ body { margin:0; padding:0; }
 <body>
 <div id="wrap">
 <div id="header">
- <h2><a style="text-decoration:none;" href="/index.html">DHT Search Engine</a></h2>
+ <h2><a style="text-decoration:none;" href="/index.html">Magnet Search Engine</a></h2>
 </div>
 <div id="main">
 <div class="search-box">
