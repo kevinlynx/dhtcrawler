@@ -18,21 +18,10 @@ dhtcrawler is a DHT crawler written in erlang. It can join a DHT network and cra
 * compile 
 
         rebar compile
-
-* start erl and add all dependent libraries path, i.e:
-
-        code:add_path("deps/kdht/ebin").
-        code:add_path("deps/bson-erlang/ebin").
-        code:add_path("deps/mongodb-erlang/ebin").
-
-* start all dependent application specified in app meta file, i.e:
-
-        Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
-        [application:start(App) || App <- Apps].
         
 * start dhtcrawler
 
-        application:start(dhtcrawler).
+        crawler_app:start()
 
 * start the http front-end
 

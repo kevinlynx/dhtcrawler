@@ -6,6 +6,7 @@
 -module(crawler_app).
 -behaviour(application).
 -export([start/2, stop/1]).
+-export([start/0]).
 
 start(_Type, _StartArgs) ->
 	File = "priv/dhtcrawler.config",
@@ -25,7 +26,8 @@ do_default_start(File) ->
 		{node_count, 10},
 		{loglevel, 3},
 		{dbhost, "localhost"},
-		{dbport, 27071}],
+		{dbport, 27017}],
+	filelib:ensure_dir("priv/"),
 	file:write_file(File, io_lib:fwrite("~p.\n",[List])),
 	do_start(List).
 
@@ -37,6 +39,16 @@ do_start(List) ->
 	DBPort = proplists:get_value(dbport, List),
 	io:format("dhtcrawler startup ~p, ~p, ~p:~p", [StartPort, Count, DBHost, DBPort]),
 	crawler_sup:start_link(StartPort, Count, DBHost, DBPort, LogLevel).
+
+start() ->
+	code:add_path("deps/kdht/ebin"),
+	code:add_path("deps/bson/ebin"),
+	code:add_path("deps/mongodb/ebin"),
+	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
+	[application:start(App) || App <- Apps],
+	application:start(dhtcrawler).
+
+
 
 
 
