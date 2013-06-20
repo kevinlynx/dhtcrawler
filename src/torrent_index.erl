@@ -36,11 +36,12 @@ start_link(Host, Port, Mod) ->
 stop() ->
 	gen_server:cast(srv_name(), stop).	
 
+%% if not `infinity` it may timeout (>5000ms), database busy?
 insert(Hash, Name, Length, Files) ->
-	gen_server:cast(srv_name(), {insert, Hash, Name, Length, Files}).
+	gen_server:call(srv_name(), {insert, Hash, Name, Length, Files}, infinity).
 
 insert(Hash, Name, Length) ->
-	gen_server:cast(srv_name(), {insert, Hash, Name, Length, []}).
+	insert(Hash, Name, Length, []).
 
 count() ->
 	gen_server:call(srv_name(), {count}).
@@ -58,8 +59,9 @@ top() ->
 index(MagHash) ->
 	gen_server:call(srv_name(), {index, MagHash}).
 
+%% if not `infinity` it may timeout (>5000ms), database busy?
 inc_announce(Hash) when is_list(Hash) ->
-	gen_server:call(srv_name(), {inc_announce, Hash}).
+	gen_server:call(srv_name(), {inc_announce, Hash}, infinity).
 
 srv_name() ->
 	torrent_index.

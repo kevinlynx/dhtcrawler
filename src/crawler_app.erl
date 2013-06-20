@@ -37,7 +37,7 @@ do_start(List) ->
 	LogLevel = proplists:get_value(loglevel, List),
 	DBHost = proplists:get_value(dbhost, List),
 	DBPort = proplists:get_value(dbport, List),
-	io:format("dhtcrawler startup ~p, ~p, ~p:~p", [StartPort, Count, DBHost, DBPort]),
+	io:format("dhtcrawler startup ~p, ~p, ~p:~p~n", [StartPort, Count, DBHost, DBPort]),
 	crawler_sup:start_link(StartPort, Count, DBHost, DBPort, LogLevel).
 
 start() ->

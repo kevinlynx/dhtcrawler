@@ -2,35 +2,38 @@
 %% dht_monitor.erl
 %% Kevin Lynx
 %% 06.14.2013
+%% TODO: better to use gen_server
 %%
 -module(dht_monitor).
 -include("vlog.hrl").
 -export([handle_event/2,
 		 handle_torrent/3,
-		 start_tell_more_nodes/1,
+		 process_announce_event/1,
+		 save_to_db/3,
 		 tell_more_nodes/1]).
 -export([debug_dump/4,
 		 debug_dump_failed/1]).
 -define(QUERY_INTERVAL, 1*60*1000).
 
 handle_event(announce_peer, {InfoHash, _IP, _BTPort}) ->
+	spawn(?MODULE, process_announce_event, [InfoHash]);
+
+handle_event(startup, {MyID}) ->
+	timer:apply_interval(?QUERY_INTERVAL, ?MODULE, tell_more_nodes, [MyID]).
+
+% since some operation will wait infinity, so spawn a new process
+% NOTE: this may cause many processes, depends on database operation speed.
+process_announce_event(InfoHash) ->
 	crawler_stats:announce(),
 	MagHash = dht_id:tohex(InfoHash),
+	% wait infinity
 	case torrent_index:inc_announce(MagHash) of
 		true -> 
 			crawler_stats:saved(false);
 		false ->
 			download(InfoHash)
-	end;
+	end.
 
-handle_event(startup, {MyID}) ->
-	timer:apply_interval(?QUERY_INTERVAL, ?MODULE, start_tell_more_nodes, [MyID]).
-
-start_tell_more_nodes(MyID) ->
-	spawn(?MODULE, tell_more_nodes, [MyID]).
-
-% directly apply_interval this function in dht_state will cause a deadlock between 
-% dht_state and dht_net ?
 tell_more_nodes(MyID) ->
 	[search:get_peers(MyID, dht_id:random()) || _ <- lists:seq(1, 3)].
 
@@ -43,13 +46,15 @@ handle_torrent(ok, MagHash, TContent) ->
 		{'EXIT', _} ->
 			?E(?FMT("parse torrent file failed ~p", [TContent]));
 		{Type, Info} -> 
-			save_to_db(MagHash, Type, Info)
+			spawn(?MODULE, save_to_db, [MagHash, Type, Info])
+			%save_to_db(MagHash, Type, Info)
 	end,
 	ok;
 
 handle_torrent(error, _MagHash, _TContent) ->
 	ok.
 
+% will wait infinity, so it's better to spawn a new process
 save_to_db(MagHash, single, {Name, Length}) ->
 	torrent_index:insert(MagHash, Name, Length);
 

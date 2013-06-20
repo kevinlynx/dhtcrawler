@@ -29,17 +29,22 @@ stop() ->
 
 download(MagHash, Mod) when is_list(MagHash) ->
 	40 = length(MagHash),
-	gen_server:call(srv_name(), {download, MagHash, Mod}).
+	gen_server:cast(srv_name(), {download, MagHash, Mod}).
 
 download(MagHash) when is_list(MagHash) ->
 	40 = length(MagHash),
-	gen_server:call(srv_name(), {download, MagHash, ?MODULE}).
+	gen_server:cast(srv_name(), {download, MagHash, ?MODULE}).
 
 srv_name() ->
 	torrent_download.
 
 init([]) ->
 	{ok, #state{reqs = gb_trees:empty()}}.
+
+handle_cast({download, MagHash, Mod}, State) ->
+	#state{reqs = Reqs} = State,
+	NewReqs = create_download(Reqs, MagHash, Mod),
+	{noreply, State#state{reqs = NewReqs}};
 
 handle_cast(stop, State) ->
     {stop, normal, State};
@@ -74,11 +79,9 @@ handle_info({http, {ReqID, Result}}, State) ->
 handle_info(_, State) ->
     {noreply, State}.
 
-handle_call({download, MagHash, Mod}, _From, State) ->
-	#state{reqs = Reqs} = State,
-	NewReqs = create_download(Reqs, MagHash, Mod),
-	{reply, ok, State#state{reqs = NewReqs}}.
-
+handle_call(_, _From, State) ->
+	{noreply, State}.
+	
 create_download(Reqs, MagHash, Mod) when is_list(MagHash) ->
 	40 = length(MagHash),
 	U1 = "http://torrage.com/torrent/" ++ MagHash ++ ".torrent",
