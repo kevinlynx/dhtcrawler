@@ -44,6 +44,7 @@ init([]) ->
 handle_cast({download, MagHash, Mod}, State) ->
 	#state{reqs = Reqs} = State,
 	NewReqs = create_download(Reqs, MagHash, Mod),
+	gb_trees:is_empty(NewReqs),
 	{noreply, State#state{reqs = NewReqs}};
 
 handle_cast(stop, State) ->
@@ -74,6 +75,7 @@ handle_info({http, {ReqID, Result}}, State) ->
 			?E(?FMT("unhandled result type ~p", [Ex])),
 			State#state.reqs
 	end,
+	gb_trees:is_empty(NewReqs),
 	{noreply, State#state{reqs = NewReqs}};
 
 handle_info(_, State) ->
@@ -81,7 +83,7 @@ handle_info(_, State) ->
 
 handle_call(_, _From, State) ->
 	{noreply, State}.
-	
+
 create_download(Reqs, MagHash, Mod) when is_list(MagHash) ->
 	40 = length(MagHash),
 	U1 = "http://torrage.com/torrent/" ++ MagHash ++ ".torrent",
