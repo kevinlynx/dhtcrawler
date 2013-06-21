@@ -6,10 +6,10 @@
 -module(crawler_app).
 -behaviour(application).
 -export([start/2, stop/1]).
--export([start/0]).
+-export([start/0, stop/0]).
 
 start(_Type, _StartArgs) ->
-	File = "priv/dhtcrawler.config",
+	File = config_file_name(),
 	io:format("load config file ~s ", [File]),
 	case file:consult(File) of
 		{error, _Reason} ->
@@ -20,6 +20,10 @@ start(_Type, _StartArgs) ->
 
 stop(_State) ->
 	crawler_sup:stop().
+
+config_file_name() ->
+	filename:join([filename:dirname(code:which(?MODULE)), 
+		"..", "priv", "dhtcrawler.config"]).
 
 do_default_start(File) ->
 	List = [{start_port, 6776},
@@ -43,10 +47,13 @@ do_start(List) ->
 	crawler_sup:start_link({StartPort, Count, DBHost, DBPort, LogLevel, DBConn}).
 
 start() ->
-	code:add_path("deps/kdht/ebin"),
 	code:add_path("deps/bson/ebin"),
+	code:add_path("deps/kdht/ebin"),
 	code:add_path("deps/mongodb/ebin"),
 	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
 	[application:start(App) || App <- Apps],
 	application:start(dhtcrawler).
+
+stop() ->
+	application:stop(dhtcrawler).
 

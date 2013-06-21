@@ -13,6 +13,7 @@
 		 exist/2,
 		 index/2,
 		 search_announce_top/2,
+		 search_recently/2,
 		 search/2]).
 -compile(export_all).
 -define(DBNAME, torrents).
@@ -59,6 +60,15 @@ search_announce_top(Conn, Count) ->
 	end),
 	[decode_torrent_item(Item) || Item <- List].
  
+% db.hashes.find({$query:{},$orderby:{created_at: 1}}).limit(10);
+search_recently(Conn, Count) ->
+	Sel = {'$query', {}, '$orderby', {created_at, -1}},
+	List = mongo_do(Conn, fun() ->
+		Cursor = mongo:find(?COLLNAME, Sel, [], 0, Count), 
+		mongo_cursor:rest(Cursor)
+	end),
+	[decode_torrent_item(Item) || Item <- List].
+
 index(Conn, Hash) when is_list(Hash) ->
 	Ret = mongo_do(Conn, fun() ->
 		mongo:find_one(?COLLNAME, {'_id', list_to_binary(Hash)})

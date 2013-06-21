@@ -23,12 +23,14 @@
 		 inc_announce/1,
 		 inc_announce/2,
 		 top/0,
+		 recent/0,
 		 index/1,
 		 count/0,
 		 stop/0]).
 -record(state, {mod = nil}).
 -define(DBSTORE, db_store_mongo).
 -define(CONN_COUNT, 10).
+-define(QUERY_TIMEOUT, 10*1000).
 
 start_link(Host, Port) ->
 	start_link(Host, Port, nil).
@@ -53,13 +55,16 @@ count() ->
 
 % {SearchList, Stats} 
 search(Key) ->
-	gen_server:call(srv_name(), {search, Key}).
+	gen_server:call(srv_name(), {search, Key}, ?QUERY_TIMEOUT).
 
 % [{single,Hash,{"movie  name",1024},1},
 %  {multi,Hash,{"this movie update name",
 %         	[{"file1",512},{"file2",128}]}, 5}]
 top() ->
-	gen_server:call(srv_name(), {top}).
+	gen_server:call(srv_name(), {top}, ?QUERY_TIMEOUT).
+
+recent() ->
+	gen_server:call(srv_name(), {recent}, ?QUERY_TIMEOUT).
 
 index(MagHash) ->
 	gen_server:call(srv_name(), {index, MagHash}).
@@ -96,6 +101,10 @@ handle_call({index, Hash}, _From, State) ->
 handle_call({top}, _From, State) ->
 	DB = db_conn_pool:get(),
 	{reply, ?DBSTORE:search_announce_top(DB, 50), State};
+
+handle_call({recent}, _From, State) ->
+	DB = db_conn_pool:get(),
+	{reply, ?DBSTORE:search_recently(DB, 50), State};
 
 handle_call({inc_announce, Hash}, _From, State) ->
 	DB = db_conn_pool:get(),

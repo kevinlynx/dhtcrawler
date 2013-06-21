@@ -8,6 +8,7 @@
 		 test_search/1,
 		 index/3,
 		 stats/3,
+		 recent/3,
 		 top/3]).
 -define(TEXT(Fmt, Args), lists:flatten(io_lib:format(Fmt, Args))).
 -import(torrent_file, [size_string/1]).
@@ -28,6 +29,13 @@ top(SessionID, _Env, _Input) ->
 	BodyList = format_search_result(Rets),
 	Body = ?TEXT("<ol>~s</ol>", [lists:flatten(BodyList)]),
 	Response = simple_html("top", Body),
+	mod_esi:deliver(SessionID, [?CONTENT_TYPE, Response]).
+
+recent(SessionID, _Env, _Input) ->
+	Rets = torrent_index:recent(),
+	BodyList = format_search_result(Rets),
+	Body = ?TEXT("<ol>~s</ol>", [lists:flatten(BodyList)]),
+	Response = simple_html("recent", Body),
 	mod_esi:deliver(SessionID, [?CONTENT_TYPE, Response]).
 
 stats(SessionID, _Env, _Input) ->
