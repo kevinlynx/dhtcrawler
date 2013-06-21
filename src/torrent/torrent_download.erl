@@ -20,6 +20,7 @@
 		 stop/0]).
 -export([handle_torrent/3]).
 -record(state, {reqs}).
+-define(BALANCE(Tree), gb_trees:balance(Tree)).
 
 start_link() ->
 	gen_server:start_link({local, srv_name()}, ?MODULE, [], []).
@@ -44,7 +45,6 @@ init([]) ->
 handle_cast({download, MagHash, Mod}, State) ->
 	#state{reqs = Reqs} = State,
 	NewReqs = create_download(Reqs, MagHash, Mod),
-	gb_trees:is_empty(NewReqs),
 	{noreply, State#state{reqs = NewReqs}};
 
 handle_cast(stop, State) ->
@@ -60,23 +60,29 @@ code_change(_, _, State) ->
     {ok, State}.
 
 handle_info({http, {ReqID, Result}}, State) ->
-	NewReqs = case Result of
-		{{_Version, 200, _R}, Headers, Body} ->
+	#state{reqs = Reqs} = State,
+	% what if, there're duplicate req comes ? that will cause gb_trees crash
+	% so, check it here
+	Defined = gb_trees:is_defined(ReqID, Reqs),
+	NewReqs = case {Defined, Result} of
+		{true, {{_Version, 200, _R}, Headers, Body}} ->
 			handle_ok_response(State, ReqID, Headers, Body);
-		{200, Body} ->
+		{true, {200, Body}} ->
 			handle_ok_response(State, ReqID, [], Body);
-		{Status, _H, _B} ->
+		{true, {Status, _H, _B}} ->
 			?W(?FMT("http request ~p failed ~p", [ReqID, Status])),
 			handle_next(State, ReqID);
-		{Code, _B} ->
+		{true, {Code, _B}} ->
 			?W(?FMT("http request (code) ~p failed ~p", [ReqID, Code])),
 			handle_next(State, ReqID);
-		Ex ->
+		{true, Ex} ->
 			?E(?FMT("unhandled result type ~p", [Ex])),
-			State#state.reqs
+			Reqs;
+		{false, _} ->
+			?E("damn, req not found in reqs"),
+			Reqs
 	end,
-	gb_trees:is_empty(NewReqs),
-	{noreply, State#state{reqs = NewReqs}};
+	{noreply, State#state{reqs = ?BALANCE(NewReqs)}};
 
 handle_info(_, State) ->
     {noreply, State}.

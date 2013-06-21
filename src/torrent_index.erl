@@ -38,7 +38,7 @@ stop() ->
 
 %% if not `infinity` it may timeout (>5000ms), database busy?
 insert(Hash, Name, Length, Files) ->
-	gen_server:call(srv_name(), {insert, Hash, Name, Length, Files}, infinity).
+	gen_server:cast(srv_name(), {insert, Hash, Name, Length, Files}).
 
 insert(Hash, Name, Length) ->
 	insert(Hash, Name, Length, []).
@@ -93,7 +93,7 @@ handle_call({inc_announce, Hash}, _From, State) ->
 	{reply, ?DBSTORE:inc_announce(DB, Hash), State};
 
 handle_call(_, _From, State) ->
-	{noreply, State}.
+	{reply, not_implemented, State}.
 
 handle_cast({insert, Hash, Name, Length, Files}, State) ->
 	#state{db = DB, mod = Mod} = State,
