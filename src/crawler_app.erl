@@ -25,6 +25,7 @@ do_default_start(File) ->
 	List = [{start_port, 6776},
 		{node_count, 10},
 		{loglevel, 3},
+		{dbconn, 15},
 		{dbhost, "localhost"},
 		{dbport, 27017}],
 	filelib:ensure_dir("priv/"),
@@ -35,10 +36,11 @@ do_start(List) ->
 	StartPort = proplists:get_value(start_port, List),
 	Count = proplists:get_value(node_count, List),
 	LogLevel = proplists:get_value(loglevel, List),
+	DBConn = proplists:get_value(dbconn, List),
 	DBHost = proplists:get_value(dbhost, List),
 	DBPort = proplists:get_value(dbport, List),
 	io:format("dhtcrawler startup ~p, ~p, ~p:~p~n", [StartPort, Count, DBHost, DBPort]),
-	crawler_sup:start_link(StartPort, Count, DBHost, DBPort, LogLevel).
+	crawler_sup:start_link({StartPort, Count, DBHost, DBPort, LogLevel, DBConn}).
 
 start() ->
 	code:add_path("deps/kdht/ebin"),
@@ -47,9 +49,4 @@ start() ->
 	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
 	[application:start(App) || App <- Apps],
 	application:start(dhtcrawler).
-
-
-
-
-
 

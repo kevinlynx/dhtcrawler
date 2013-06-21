@@ -26,12 +26,17 @@ handle_event(startup, {MyID}) ->
 process_announce_event(InfoHash) ->
 	crawler_stats:announce(),
 	MagHash = dht_id:tohex(InfoHash),
-	% wait infinity
-	case torrent_index:inc_announce(MagHash) of
-		true -> 
-			crawler_stats:saved(false);
-		false ->
-			download(InfoHash)
+	Wait = 10*1000,
+	try 
+		case torrent_index:inc_announce(MagHash, Wait) of
+			true -> 
+				crawler_stats:saved(false);
+			false ->
+				download(InfoHash)
+		end
+	catch
+		exit:{timeout, _} -> 
+			?E(?FMT("inc_announce timeout exception for ~s", [MagHash]))
 	end.
 
 tell_more_nodes(MyID) ->
@@ -46,15 +51,13 @@ handle_torrent(ok, MagHash, TContent) ->
 		{'EXIT', _} ->
 			?E(?FMT("parse torrent file failed ~p", [TContent]));
 		{Type, Info} -> 
-			spawn(?MODULE, save_to_db, [MagHash, Type, Info])
-			%save_to_db(MagHash, Type, Info)
+			save_to_db(MagHash, Type, Info)
 	end,
 	ok;
 
 handle_torrent(error, _MagHash, _TContent) ->
 	ok.
 
-% will wait infinity, so it's better to spawn a new process
 save_to_db(MagHash, single, {Name, Length}) ->
 	torrent_index:insert(MagHash, Name, Length);
 

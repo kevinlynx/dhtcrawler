@@ -7,13 +7,12 @@
 -behaviour(supervisor).
 -include("vlog.hrl").
 -export([init/1]).
--export([start_link/5,
+-export([start_link/1,
 		 stop/0,
 		 save_all_state/0]).
 
-start_link(StartPort, Count, DBHost, DBPort, LogLevel) ->
-	supervisor:start_link({local, srv_name()}, ?MODULE, 
-		[StartPort, Count, DBHost, DBPort, LogLevel]).
+start_link(Args) ->
+	supervisor:start_link({local, srv_name()}, ?MODULE, [Args]).
 
 stop() ->
 	save_all_state(),
@@ -22,14 +21,14 @@ stop() ->
 srv_name() ->
 	dht_crawler_sup.
 
-init([StartPort, Count, DBHost, DBPort, LogLevel]) ->
+init([{StartPort, Count, DBHost, DBPort, LogLevel, DBConn}]) ->
 	Spec = {one_for_one, 1, 600},
 	Instances = create_dht_instance(StartPort, Count),
 	Logger = [{dht_logger, {vlog, start_link, ["dht_crawler.txt", LogLevel]},
 					permanent, 2000, worker, dynamic}],
 	Downloader = [{torrent_downloader, {torrent_download, start_link, []},
 					permanent, 2000, worker, dynamic}],
-	DBStorer = [{torrent_index, {torrent_index, start_link, [DBHost, DBPort, crawler_stats]},
+	DBStorer = [{torrent_index, {torrent_index, start_link, [DBHost, DBPort, crawler_stats, DBConn]},
 					permanent, 2000, worker, dynamic}],
 	Children = Logger ++ Downloader ++ DBStorer ++ Instances,
     {ok, {Spec, Children}}.
