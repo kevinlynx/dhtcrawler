@@ -26,7 +26,7 @@ handle_event(startup, {MyID}) ->
 process_announce_event(InfoHash) ->
 	crawler_stats:announce(),
 	MagHash = dht_id:tohex(InfoHash),
-	Wait = 10*1000,
+	Wait = 60*1000,
 	try 
 		case torrent_index:inc_announce(MagHash, Wait) of
 			true -> 
