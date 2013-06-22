@@ -29,7 +29,7 @@
 		 stop/0]).
 -record(state, {mod = nil}).
 -define(DBSTORE, db_store_mongo).
--define(CONN_COUNT, 10).
+-define(CONN_COUNT, 2).
 -define(QUERY_TIMEOUT, 10*1000).
 
 start_link(Host, Port) ->

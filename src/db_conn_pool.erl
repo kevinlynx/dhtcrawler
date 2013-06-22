@@ -51,8 +51,12 @@ handle_cast(_, State) ->
     {noreply, State}.
 
 terminate(_, State) ->
-	#state{pool = Pool} = State,
-	close_conn(Pool),
+	case State of
+		{_, _, _} -> ok;
+		_ ->
+			#state{pool = Pool} = State,
+			close_conn(Pool)
+	end,
     {ok, State}.
 
 code_change(_, _, State) ->

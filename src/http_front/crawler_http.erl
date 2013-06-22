@@ -18,6 +18,10 @@
 -record(state, {html_temp, httpid}).
 
 start(DBHost, DBPort, Port) ->
+	code:add_path("deps/bson/ebin"),
+	code:add_path("deps/mongodb/ebin"),
+	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
+	[application:start(App) || App <- Apps],
 	gen_server:start({local, srv_name()}, ?MODULE, [DBHost, DBPort, Port], []).
 
 start() ->
