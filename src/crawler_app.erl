@@ -47,6 +47,7 @@ do_start(List) ->
 	crawler_sup:start_link({StartPort, Count, DBHost, DBPort, LogLevel, DBConn}).
 
 start() ->
+	error_logger:logfile({open, "crash.log"}),
 	code:add_path("deps/bson/ebin"),
 	code:add_path("deps/kdht/ebin"),
 	code:add_path("deps/mongodb/ebin"),

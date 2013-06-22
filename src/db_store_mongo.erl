@@ -79,25 +79,13 @@ index(Conn, Hash) when is_list(Hash) ->
 	end.
 
 insert(Conn, Hash, Name, Length, Files) when is_list(Hash) ->
-	case find_exist(Conn, Hash) of
-		{} -> 
-			NewDoc = create_torrent_desc(Hash, Name, Length, 1, Files),
-			Ret = mongo_do(Conn, fun() ->
-				mongo:insert(?COLLNAME, NewDoc)
-			end),
-			{new, Ret};
-		{Doc} ->
-			{Announce} = bson:lookup(announce, Doc),	
-			true = is_integer(Announce),
-			NewDoc = create_torrent_desc(Hash, Name, Length, Announce + 1, Files),
-			Ret = mongo_do(Conn, fun() ->
-				mongo:delete(?COLLNAME, hash_selector(Hash)),
-				mongo:insert(?COLLNAME, NewDoc)
-				% update will not overwrite the old one, don't know the reason yet
-				%mongo:update(?COLLNAME, hash_selector(Hash), NewDoc)
-			end),
-			{update, Ret}
-	end.
+	NewDoc = create_torrent_desc(Hash, Name, Length, 1, Files),
+	mongo_do(Conn, fun() ->
+		%mongo:insert(?COLLNAME, NewDoc)
+		% since the doc may already exist (inc_announce failed), i update the doc here
+		Sel = {'_id', list_to_binary(Hash)},
+		mongo:update(?COLLNAME, Sel, NewDoc, true)
+	end).
 
 inc_announce(Conn, Hash) when is_list(Hash) ->
 	% damn, mongodb-erlang doesnot support update a field for an object,
@@ -215,7 +203,7 @@ decode_file([]) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 test_insert() ->
 	Conn = init(localhost, 27017),
-	insert(Conn, "7C6932E7EC1CF5B00AE991871E57B2375DADA5A9", "movie 1", 128, []),
+	insert(Conn, "7C6932E7EC1CF5B00AE991871E57B2375DADA5A0", "movie 1", 128, []),
 	insert(Conn, "AE94E340B5234C8410F37CFA7170F8C5657ECE5D", "another movie name", 0, 
 		[{"subfile-a", 100}, {"subfile-b", 80}]),
 	insert(Conn, "0F1B5BE407E130AEEA8AB2964F5100190086ED93", "oh it work", 2456, []),

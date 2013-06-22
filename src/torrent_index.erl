@@ -117,15 +117,8 @@ handle_cast({insert, Hash, Name, Length, Files}, State) ->
 	#state{mod = Mod} = State,
 	DB = db_conn_pool:get(),
 	try 
-		Type = case ?DBSTORE:insert(DB, Hash, Name, Length, Files) of
-			{new, _} -> new;
-			{update, _} -> update
-		end,
-		case {Type, Mod} of
-			{_, nil} -> ok;
-			{new, _} -> Mod:handle_new();
-			{update, _} -> Mod:handle_update()
-		end
+		?DBSTORE:insert(DB, Hash, Name, Length, Files),
+		Mod:handle_new()
 	catch
 		throw:Error ->
 			?E(?FMT("insert to db failed ~s ~s ~p", [binary_to_list(Hash), Name, Error]))

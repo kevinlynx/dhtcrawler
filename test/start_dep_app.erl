@@ -4,7 +4,7 @@
 %% 06.15.2013
 %%
 -module(start_dep_app).
--export([startcouchdb/0, startmongo/0, startmongo_c/0]).
+-export([startcouchdb/0, startmongo/0]).
 
 %% Damn, couchbeam requires jiffy, ibrowse, public_key, sasl, crypto.
 startcouchdb() ->
@@ -15,13 +15,9 @@ startcouchdb() ->
 	[application:start(App) || App <- Apps].
 
 startmongo() ->
-	code:add_path("e:/prj/bson-erlang/ebin"),
-	code:add_path("e:/prj/mongodb-erlang/ebin"),
+	code:add_path("deps/bson/ebin"),
+	code:add_path("deps/mongodb/ebin"),
+	code:add_path("deps/kdht/ebin"),
 	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
 	[application:start(App) || App <- Apps].
 
-startmongo_c() ->
-	code:add_path("e:/prjs/bson-erlang/ebin"),
-	code:add_path("e:/prjs/mongodb-erlang/ebin"),
-	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
-	[application:start(App) || App <- Apps].
