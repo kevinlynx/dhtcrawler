@@ -6,7 +6,7 @@
 -module(crawler_app).
 -behaviour(application).
 -export([start/2, stop/1]).
--export([start/0, stop/0]).
+-export([start/0, startboth/0, stop/0]).
 
 start(_Type, _StartArgs) ->
 	File = config_file_name(),
@@ -57,4 +57,8 @@ start() ->
 
 stop() ->
 	application:stop(dhtcrawler).
+
+startboth() ->
+    start(),
+    crawler_http:start().
 
