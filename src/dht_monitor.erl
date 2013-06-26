@@ -13,7 +13,7 @@
 		 tell_more_nodes/1]).
 -export([debug_dump/4,
 		 debug_dump_failed/1]).
--define(QUERY_INTERVAL, 1*60*1000).
+-define(QUERY_INTERVAL, 5*60*1000).
 
 handle_event(announce_peer, {InfoHash, _IP, _BTPort}) ->
 	spawn(?MODULE, process_announce_event, [InfoHash]);
@@ -40,7 +40,7 @@ process_announce_event(InfoHash) ->
 	end.
 
 tell_more_nodes(MyID) ->
-	[search:get_peers(MyID, dht_id:random()) || _ <- lists:seq(1, 3)].
+	search:get_peers(MyID, dht_id:random()).
 
 download(InfoHash) ->
 	MagHash = dht_id:tohex(InfoHash),

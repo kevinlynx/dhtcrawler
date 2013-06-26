@@ -21,6 +21,7 @@
 -export([handle_torrent/3]).
 -record(state, {reqs}).
 -define(BALANCE(Tree), gb_trees:balance(Tree)).
+-define(MAXREQS, 1000).
 
 start_link() ->
 	gen_server:start_link({local, srv_name()}, ?MODULE, [], []).
@@ -45,6 +46,11 @@ init([]) ->
 handle_cast({download, MagHash, Mod}, State) ->
 	#state{reqs = Reqs} = State,
 	NewReqs = create_download(Reqs, MagHash, Mod),
+	ReqSize = gb_trees:size(NewReqs),
+	case ReqSize > ?MAXREQS of
+		true -> ?E(?FMT("torrent download req ~p > ~p", [gb_trees:size(NewReqs), ?MAXREQS]));
+		false -> ok
+	end,
 	{noreply, State#state{reqs = NewReqs}};
 
 handle_cast(stop, State) ->
