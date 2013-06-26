@@ -46,6 +46,7 @@ init([DBHost, DBPort, Port]) ->
   	{server_name, "crawler_http"},
   	{document_root, "www"},
   	{server_root, "."},
+    {directory_index, ["index.html"]},
   	{erl_script_alias, {"/e", [http_handler]}},
   	{mime_types, [{"html","text/html"}, 
   				  {"css","text/css"}, {"js","application/x-javascript"}]}]),
