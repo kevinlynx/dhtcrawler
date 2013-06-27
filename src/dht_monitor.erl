@@ -13,13 +13,13 @@
 		 tell_more_nodes/1]).
 -export([debug_dump/4,
 		 debug_dump_failed/1]).
--define(QUERY_INTERVAL, 5*60*1000).
+-define(QUERY_INTERVAL, 1*60*1000).
 
 handle_event(announce_peer, {InfoHash, _IP, _BTPort}) ->
 	spawn(?MODULE, process_announce_event, [InfoHash]);
 
 handle_event(startup, {MyID}) ->
-	timer:apply_interval(?QUERY_INTERVAL, ?MODULE, tell_more_nodes, [MyID]).
+	spawn(?MODULE, tell_more_nodes, [MyID]).
 
 % since some operation will wait infinity, so spawn a new process
 % NOTE: this may cause many processes, depends on database operation speed.
@@ -40,7 +40,9 @@ process_announce_event(InfoHash) ->
 	end.
 
 tell_more_nodes(MyID) ->
-	search:get_peers(MyID, dht_id:random()).
+	search:get_peers(MyID, dht_id:random()),
+	timer:sleep(?QUERY_INTERVAL),
+	tell_more_nodes(MyID). % tail recursive, be careful
 
 download(InfoHash) ->
 	MagHash = dht_id:tohex(InfoHash),
