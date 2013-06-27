@@ -18,6 +18,9 @@
 handle_event(announce_peer, {InfoHash, _IP, _BTPort}) ->
 	spawn(?MODULE, process_announce_event, [InfoHash]);
 
+handle_event(get_peers, {_InfoHash, _IP, _Port}) ->
+	crawler_stats:get_peers();
+
 handle_event(startup, {MyID}) ->
 	spawn(?MODULE, tell_more_nodes, [MyID]).
 

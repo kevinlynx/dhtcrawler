@@ -15,6 +15,7 @@
 		 stop/0,
 		 saved/1,
 		 announce/0,
+		 get_peers/0,
 		 dump/0,
 		 get_stats_desc/0,
 		 get_stats/0]).
@@ -32,6 +33,9 @@ stop() ->
 
 announce() ->
 	gen_server:cast(srv_name(), {announce}).
+
+get_peers() ->
+	gen_server:cast(srv_name(), {get_peers}).
 
 saved(New) ->
 	Type = case New of
@@ -87,6 +91,10 @@ handle_cast({announce}, State) ->
 	#crawler_stats{announce_count = A} = State,
 	{noreply, State#crawler_stats{announce_count = A + 1}};
 
+handle_cast({get_peers}, State) ->
+	#crawler_stats{get_peers_count = G} = State,
+	{noreply, State#crawler_stats{get_peers_count = G + 1}};
+
 handle_cast({dump}, State) ->
 	do_dump(State),
 	{noreply, State};
@@ -135,6 +143,7 @@ do_dump(State) ->
 
 format_stats(State) ->
 	#crawler_stats{
+		get_peers_count = G,
 		announce_count = A,
 		torrent_count = ThisCount,
 		new_saved = New,
@@ -145,11 +154,8 @@ format_stats(State) ->
 	?TEXT("  stats time ~b ~2.10.0b:~2.10.0b:~2.10.0b~n", 
 		[Day, H, M, S]) ++
 	?TEXT("  torrent sum      ~b~n", [Sum]) ++
+	?TEXT("  get_peers count  ~b~n", [G]) ++
 	?TEXT("  announce count   ~b~n", [A]) ++
 	?TEXT("  download torrent ~b~n", [ThisCount]) ++
 	?TEXT("  new saved        ~b~n", [New]) ++
 	?TEXT("  updated          ~b~n", [U]).
-
-
-
-
