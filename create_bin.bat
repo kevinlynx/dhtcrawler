@@ -9,7 +9,6 @@ mkdir bin\www
 copy www\*.* bin\www\
 copy tools\*.* bin\
 mkdir bin\priv
-copy priv\*.* bin\priv\
 mkdir bin\ebin         
 copy ebin\*.* bin\ebin\
 pause
