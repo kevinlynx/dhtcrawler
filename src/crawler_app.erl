@@ -51,7 +51,7 @@ start() ->
 	code:add_path("deps/bson/ebin"),
 	code:add_path("deps/kdht/ebin"),
 	code:add_path("deps/mongodb/ebin"),
-	Apps = [crypto, public_key, ssl, inets, bson, mongodb],	
+	Apps = [asn1, crypto, public_key, ssl, inets, bson, mongodb],	
 	[application:start(App) || App <- Apps],
 	application:start(dhtcrawler).
 
