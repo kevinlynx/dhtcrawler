@@ -8,26 +8,27 @@
 -include("vlog.hrl").
 -export([handle_event/2,
 		 handle_torrent/3,
-		 process_announce_event/1,
+		 process_infohash_event/1,
 		 save_to_db/3,
 		 tell_more_nodes/1]).
 -export([debug_dump/4,
 		 debug_dump_failed/1]).
 -define(QUERY_INTERVAL, 1*60*1000).
 
-handle_event(announce_peer, {InfoHash, _IP, _BTPort}) ->
-	spawn(?MODULE, process_announce_event, [InfoHash]);
+% depends on the test log, `get_peers' > `announce_peer'
+handle_event(announce_peer, {_InfoHash, _IP, _BTPort}) ->
+	crawler_stats:announce();
 
-handle_event(get_peers, {_InfoHash, _IP, _Port}) ->
-	crawler_stats:get_peers();
+handle_event(get_peers, {InfoHash, _IP, _Port}) ->
+	crawler_stats:get_peers(),
+	spawn(?MODULE, process_infohash_event, [InfoHash]);
 
 handle_event(startup, {MyID}) ->
 	spawn(?MODULE, tell_more_nodes, [MyID]).
 
 % since some operation will wait infinity, so spawn a new process
 % NOTE: this may cause many processes, depends on database operation speed.
-process_announce_event(InfoHash) ->
-	crawler_stats:announce(),
+process_infohash_event(InfoHash) ->
 	MagHash = dht_id:tohex(InfoHash),
 	Wait = 60*1000,
 	try 
