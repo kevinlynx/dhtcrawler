@@ -18,7 +18,11 @@ dhtcrawler is a DHT crawler written in erlang. It can join a DHT network and cra
 * compile 
 
         rebar compile
-        
+
+* starting the erlang shell with the ebin path added
+
+        erl -pa ebin
+
 * start dhtcrawler
 
         crawler_app:start()
